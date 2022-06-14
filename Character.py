@@ -15,7 +15,8 @@ CHAIR_POOF = [pygame.image.load('images/chair_poof/chair_poof_01_lowres.png'),
 
 CHAIR = pygame.image.load('images/chair_poof/chair_poof_07_lowres.png')
 
-# WAVE = pygame.image.load('')
+WAVE = [pygame.image.load('images/wave_anim/wave_01_lowres.png'),
+        pygame.image.load('images/wave_anim/wave_02_lowres.png')] * 10
 
 
 class Character:
@@ -51,7 +52,7 @@ class Character:
         self.animation_speed = 3  # speed of changing frames (should be a multiple of len(frames), but NOT SHURE)
         self.move_animation_count = 0  # counter for frames
         self.chair_animation_count = 0  # counter for frames
-        # self.wave_animation_count = len(CHAIR_POOF) * self.animation_speed
+        self.wave_animation_count = 0
 
         self.add_lurker(self)
 
@@ -65,12 +66,20 @@ class Character:
             self.image_rect.centerx -= 6
             self.position -= 1
         else:
-            # FIXME: if NOT OTHER ANIMATION THEN SHOW IDLE
-            self.screen.blit(SIT, self.image_rect)
-            self.screen.blit(self.text, (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
+            if not self.wave_animation_count:
+                self.screen.blit(SIT, self.image_rect)
+                self.screen.blit(self.text,
+                                 (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
 
     def wave(self):
-        pass
+        if self.wave_animation_count > 0 and self.position <= 0:
+            self.screen.blit(WAVE[self.wave_animation_count // self.animation_speed], self.image_rect)
+            self.screen.blit(self.text, (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
+            self.wave_animation_count -= 1
+
+    def wave_update(self):
+        if self.position <= 0:
+            self.wave_animation_count = (len(WAVE) * self.animation_speed) - 1
 
     def chair_puff(self):
         if self.position <= 50 - (self.animation_speed * len(CHAIR_POOF)):

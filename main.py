@@ -58,9 +58,9 @@ async def new_lurker(ctx):
 @bot.command(name='wave')
 async def lurker_wave(ctx):
     user_name = ctx.message.tags['display-name']
-    # for lurker in Character.lurking_list:
-    #     if lurker.name == user_name:
-    #         lurker.wave_action = True
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name:
+            lurker.wave_update()
 
 
 @bot.command(name='lurkers')
