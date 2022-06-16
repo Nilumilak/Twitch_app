@@ -19,11 +19,10 @@ header = {
 }
 param = {
     'login': 'pianoparrot',
-    'from_id': '83984822',
-    # 'broadcaster_id': '83984822'
 }
-respond = requests.get('https://tmi.twitch.tv/group/user/pianoparrot/chatters', headers=header, params=param)
+respond = requests.get('https://tmi.twitch.tv/group/user/pianoparrot/chatters', headers=header)
 print(respond.status_code)
+pprint(respond.json()['chatters']['viewers'] + respond.json()['chatters']['broadcaster'] + respond.json()['chatters']['moderators'])
 pprint(respond.json())
 
 # header = {
@@ -31,10 +30,9 @@ pprint(respond.json())
 #     'Client-Id': client_id,
 # }
 # param = {
-#     'login': 'pianoparrot',
-#     'from_id': '83984822',
-#     # 'broadcaster_id': '83984822'
+#     'broadcaster_id': '83984822'
 # }
-# respond = requests.get('https://api.twitch.tv/helix/users/follows', headers=header, params=param)
+# respond = requests.get('https://api.twitch.tv/helix/channels', headers=header, params=param)
 # print(respond.status_code)
 # pprint(respond.json())
+#

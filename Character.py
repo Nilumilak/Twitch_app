@@ -13,10 +13,17 @@ CHAIR_POOF = [pygame.image.load('images/chair_poof/chair_poof_01_lowres.png'),
               pygame.image.load('images/chair_poof/chair_poof_06_lowres.png'),
               pygame.image.load('images/chair_poof/chair_poof_07_lowres.png')]
 
+CHAIR_POOF_REVERSED = list(reversed(CHAIR_POOF))
+
 CHAIR = pygame.image.load('images/chair_poof/chair_poof_07_lowres.png')
 
 WAVE = [pygame.image.load('images/wave_anim/wave_01_lowres.png'),
         pygame.image.load('images/wave_anim/wave_02_lowres.png')] * 10
+
+ClAP = [pygame.image.load('images/clap_anim/clap_01_lowres.png'),
+        pygame.image.load('images/clap_anim/clap_02_lowres.png'),
+        pygame.image.load('images/clap_anim/clap_03_lowres.png'),
+        pygame.image.load('images/clap_anim/clap_02_lowres.png')] * 5
 
 
 class Character:
@@ -50,13 +57,22 @@ class Character:
         self.seat_point = self.image_rect.centerx - self.position * 6  # the final point for a character
 
         self.animation_speed = 3  # speed of changing frames (should be a multiple of len(frames), but NOT SHURE)
-        self.move_animation_count = 0  # counter for frames
-        self.chair_animation_count = 0  # counter for frames
-        self.wave_animation_count = 0
+        self.move_animation_count = 0  # counter for MOVE frames
+        self.leave_animation_count = 0  # counter for LEAVING frames
+        self.chair_animation_count = 0  # counter for CHAIR frames
+        self.wave_animation_count = 0  # counter for WAVE frames
+        self.clap_animation_count = 0  # counter for CLAP frames
 
         self.add_lurker(self)
 
+    @property
+    def all_animations(self):
+        return {self.leave_animation_count, self.wave_animation_count, self.clap_animation_count}
+
     def move(self):
+        """
+        The character is going to the seat
+        """
         if self.move_animation_count >= self.animation_speed * len(WALK_LEFT):
             self.move_animation_count = 0
         if self.position > 0:
@@ -66,30 +82,90 @@ class Character:
             self.image_rect.centerx -= 6
             self.position -= 1
         else:
-            if not self.wave_animation_count:
+            if not any(self.all_animations):  # Checks if other animations aren't working
                 self.screen.blit(SIT, self.image_rect)
                 self.screen.blit(self.text,
                                  (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
 
     def wave(self):
+        """
+        The character is waving if other animations isn't called
+        """
         if self.wave_animation_count > 0 and self.position <= 0:
             self.screen.blit(WAVE[self.wave_animation_count // self.animation_speed], self.image_rect)
             self.screen.blit(self.text, (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
             self.wave_animation_count -= 1
 
     def wave_update(self):
-        if self.position <= 0:
-            self.wave_animation_count = (len(WAVE) * self.animation_speed) - 1
+        """
+        Updates the counter for waving
+        """
+        if not any(self.all_animations - {self.wave_animation_count}):  # checks if other animations aren't working
+            if self.position <= 0:
+                self.wave_animation_count = (len(WAVE) * self.animation_speed) - 1
+
+    def clap(self):
+        """
+        The character is clapping if other animations isn't called
+        """
+        if self.clap_animation_count > 0 and self.position <= 0:
+            self.screen.blit(ClAP[self.clap_animation_count // self.animation_speed], self.image_rect)
+            self.screen.blit(self.text, (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
+            self.clap_animation_count -= 1
+
+    def clap_update(self):
+        """
+        Updates the counter for clapping
+        """
+        if not any(self.all_animations - {self.clap_animation_count}):  # checks if other animations aren't working
+            if self.position <= 0:
+                self.clap_animation_count = (len(ClAP) * self.animation_speed) - 1
 
     def chair_puff(self):
-        if self.position <= 50 - (self.animation_speed * len(CHAIR_POOF)):
+        """
+        The chair animation
+        """
+        if self.image_rect.centerx < 0 and self.chair_animation_count < (len(CHAIR_POOF) * self.animation_speed):     # The chair fades out
+            self.screen.blit(CHAIR_POOF_REVERSED[self.chair_animation_count // self.animation_speed],
+                             (self.seat_point - self.image_rect.width / 2,
+                              self.image_rect.centery - self.image_rect.height / 2))
+            self.chair_animation_count += 1
+
+        elif self.position <= 50 and self.chair_animation_count >= (len(CHAIR_POOF) * self.animation_speed) or self.leave_animation_count > 0:      # The chair stands
             self.screen.blit(CHAIR, (
                 self.seat_point - self.image_rect.width / 2, self.image_rect.centery - self.image_rect.height / 2))
-        elif self.position <= 49:
+
+        elif 0 < self.position <= 49:               # The chair fades in
             self.screen.blit(CHAIR_POOF[self.chair_animation_count // self.animation_speed],
                              (self.seat_point - self.image_rect.width / 2,
                               self.image_rect.centery - self.image_rect.height / 2))
             self.chair_animation_count += 1
+
+    def leave(self):
+        """
+        The character leaves the seat
+        """
+        if self.leave_animation_count > 0 and self.position <= 0:
+            if self.position <= 0:
+                self.screen.blit(WALK_LEFT[self.leave_animation_count // self.animation_speed], self.image_rect)
+                self.screen.blit(self.text,
+                                 (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
+                self.leave_animation_count -= 1
+                self.image_rect.centerx -= 6
+            if self.leave_animation_count <= 0:
+                self.leave_animation_count = (len(WALK_LEFT) * self.animation_speed) - 1
+            if self.image_rect.centerx <= -1 * (len(CHAIR_POOF_REVERSED)*self.animation_speed*6):
+                Character.positions[self.pos_place] = True
+                Character.lurking_list.remove(self)
+
+    def leave_update(self):
+        """
+        Updates the counter for leaving
+        """
+        if not any(self.all_animations - {self.leave_animation_count}):  # checks if other animations aren't working
+            if self.position <= 0:
+                self.leave_animation_count = (len(WALK_LEFT) * self.animation_speed) - 1
+                self.chair_animation_count = 0
 
     @classmethod
     def add_lurker(cls, user_name):
@@ -98,10 +174,3 @@ class Character:
     @classmethod
     def show_lurkers(cls):
         return ', '.join([something.name for something in cls.lurking_list])
-
-    @classmethod
-    def leaving(cls, user_name):
-        for lurker in cls.lurking_list:
-            if lurker.name == user_name:
-                cls.positions[lurker.pos_place] = True
-                cls.lurking_list.remove(lurker)
