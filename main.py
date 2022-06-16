@@ -138,7 +138,7 @@ if __name__ == '__main__':
                 sys.exit()
         screen.fill(bg_color)
         if Character.lurking_list:
-            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap(), lurker.leave()) for lurker in
-             Character.lurking_list]
+            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap()) for lurker in Character.lurking_list]
+            [lurker.leave() for lurker in Character.lurking_list]
         pygame.display.update()
         pygame.time.delay(40)
