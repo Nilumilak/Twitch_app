@@ -71,7 +71,7 @@ async def new_lurker(ctx):
 
 @bot.command(name='wave')
 async def lurker_wave(ctx):
-    user_name = ctx.message.tags['display-name']
+    user_name = ctx.message.author.name
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name:
@@ -80,7 +80,7 @@ async def lurker_wave(ctx):
 
 @bot.command(name='clap')
 async def lurker_clap(ctx):
-    user_name = ctx.message.tags['display-name']
+    user_name = ctx.message.author.name
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name:
@@ -89,7 +89,7 @@ async def lurker_clap(ctx):
 
 @bot.command(name='leave')
 async def lurker_leave(ctx):
-    user_name = ctx.message.tags['display-name']
+    user_name = ctx.message.author.name
 
     if user_name not in [lurker.name for lurker in Character.lurking_list]:
         await ctx.send(f"Hey {user_name}, you were not lurking :-)")

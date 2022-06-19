@@ -20,10 +20,8 @@ CHAIR = pygame.image.load('images/chair_poof/chair_poof_07_lowres.png')
 WAVE = [pygame.image.load('images/wave_anim/wave_01_lowres.png'),
         pygame.image.load('images/wave_anim/wave_02_lowres.png')] * 10
 
-ClAP = [pygame.image.load('images/clap_anim/clap_01_lowres.png'),
-        pygame.image.load('images/clap_anim/clap_02_lowres.png'),
-        pygame.image.load('images/clap_anim/clap_03_lowres.png'),
-        pygame.image.load('images/clap_anim/clap_02_lowres.png')] * 5
+ClAP = [pygame.image.load('images/clap_anim/clap_alt_01_lowres.png'),
+        pygame.image.load('images/clap_anim/clap_alt_02_lowres.png')] * 10
 
 
 class Character:
