@@ -1,4 +1,8 @@
 import pygame
+import database
+from datetime import datetime, timedelta
+
+time_counter = timedelta(minutes=1)
 
 WALK_LEFT = [pygame.image.load('images/basic/1.png'), pygame.image.load('images/basic/2.png'),
              pygame.image.load('images/basic/3.png')]
@@ -30,9 +34,11 @@ class Character:
                  2720: True, 2820: True, 2920: True, 3020: True, 3120: True, 3220: True, 3320: True, 3420: True,
                  3520: True, 3620: True, 3720: True}
 
-    def __init__(self, name, screen):
+    def __init__(self, name, screen, score=0):
         self.name = name
         self.screen = screen
+        self.score = score
+        self.time = datetime.now()
 
         self.image = SIT
         self.image_rect = self.image.get_rect()
@@ -62,6 +68,11 @@ class Character:
         self.clap_animation_count = 0  # counter for CLAP frames
 
         self.add_lurker(self)
+
+    def score_gain(self):
+        if datetime.now() >= self.time + time_counter:
+            self.score += 1
+            self.time = datetime.now()
 
     @property
     def all_animations(self):
@@ -153,6 +164,7 @@ class Character:
             if self.leave_animation_count <= 0:
                 self.leave_animation_count = (len(WALK_LEFT) * self.animation_speed) - 1
             if self.image_rect.centerx <= -1 * (len(CHAIR_POOF_REVERSED)*self.animation_speed*6):
+                database.update_score(self.name, self.score)
                 Character.positions[self.pos_place] = True
                 Character.lurking_list.remove(self)
 

@@ -7,6 +7,7 @@ import sys
 from twitchio.ext import commands
 from threading import Thread
 from Character import Character
+import database
 
 config = configparser.ConfigParser()
 config.read('settings.ini')
@@ -65,7 +66,11 @@ async def new_lurker(ctx):
         await ctx.send(f"I'm sorry {user_name}, but there are no free seats :-(")
 
     else:
-        Character(user_name, screen)
+        if database.check_users(user_name):
+            Character(user_name, screen, database.get_score(user_name))
+        else:
+            database.insert_user(user_name)
+            Character(user_name, screen)
         await ctx.send(f"{user_name} is now lurking")
 
 
@@ -99,6 +104,20 @@ async def lurker_leave(ctx):
             if lurker.name == user_name and lurker.position <= 0 and not any(lurker.all_animations):
                 lurker.leave_update()
                 await ctx.send(f"{user_name} has left the lurking place")
+
+
+@bot.command(name='score')
+async def lurker_score(ctx):
+    user_name = ctx.message.author.name
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name:
+            await ctx.send(f"Your score: {lurker.score}")
+
+
+@bot.command(name='com_list')
+async def com_list(ctx):
+    await ctx.send(f"Commands are available: !lurk, !leave, !wave, !clap, !score, !lurkers")
 
 
 @bot.command(name='lurkers')
@@ -138,7 +157,7 @@ if __name__ == '__main__':
                 sys.exit()
         screen.fill(bg_color)
         if Character.lurking_list:
-            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap()) for lurker in Character.lurking_list]
+            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap(), lurker.score_gain()) for lurker in Character.lurking_list]
             [lurker.leave() for lurker in Character.lurking_list]
         pygame.display.update()
         pygame.time.delay(40)
