@@ -115,6 +115,16 @@ async def lurker_score(ctx):
             await ctx.send(f"Your score: {lurker.score}")
 
 
+@bot.command(name='leave_all')
+async def lurker_leave(ctx):
+    user_name = ctx.message.author.name
+
+    if user_name == 'pianoparrot':
+        for lurker in Character.lurking_list:
+            if lurker.position <= 0 and not any(lurker.all_animations):
+                lurker.leave_update()
+
+
 @bot.command(name='com_list')
 async def com_list(ctx):
     await ctx.send(f"Commands are available: !lurk, !leave, !wave, !clap, !score, !lurkers")
