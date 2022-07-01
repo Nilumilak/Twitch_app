@@ -18,6 +18,9 @@ token_oauth = config['Twitch']['token_oauth']
 
 
 def get_chatters():
+    """
+    Gets list of viewers from chat.
+    """
     header = {
         'Authorization': f'Bearer {access_token}',
         'Client-Id': client_id,
@@ -44,6 +47,9 @@ async def event_message(ctx):
 
 @bot.command(name='test')
 async def test_command(ctx):
+    """
+    Testing function.
+    """
     print(ctx.message.raw_data)
     print(ctx.message.content)
     print(ctx.message.author)
@@ -139,13 +145,17 @@ async def all_lurkers_list(ctx):
         await ctx.send("Nobody is lurking now...")
 
 
-class Thread1(Thread):
-    def run(self):
-        bot.run()
+def checking():
+    global past_time
+    past_time = time.time()
+    current_viewers = get_chatters()
+    for lurker in Character.lurking_list:
+        if lurker.name not in current_viewers:
+            lurker.leave_update()
 
 
 if __name__ == '__main__':
-    t1 = Thread1()
+    t1 = Thread(target=bot.run)
     t1.start()
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
@@ -156,18 +166,16 @@ if __name__ == '__main__':
 
     while True:
         if time.time() >= past_time + 600:  # if 10 minutes has passed, checks if lurkers are still watching
-            past_time = time.time()
-            current_viewers = get_chatters()
-            for lurker in Character.lurking_list:
-                if lurker.name not in current_viewers:
-                    lurker.leave_update()
+            t2 = Thread(target=checking)
+            t2.start()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
         screen.fill(bg_color)
         if Character.lurking_list:
-            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap(), lurker.score_gain()) for lurker in Character.lurking_list]
+            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap(), lurker.score_gain()) for lurker in
+             Character.lurking_list]
             [lurker.leave() for lurker in Character.lurking_list]
         pygame.display.update()
         pygame.time.delay(40)
