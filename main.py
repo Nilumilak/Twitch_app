@@ -138,13 +138,13 @@ async def clods(ctx):
 @bot.command(name='throw')
 async def throw(ctx):
     user_name = ctx.message.tags['display-name']
-    target = (ctx.message.content[ctx.message.content.find(' ') + 1:]).lower()
+    target = (ctx.message.content[ctx.message.content.find(' ') + 1:])
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name and lurker.position <= 0 and not any(lurker.all_animations):
             if lurker.clod_amount > 0:
                 for aim in Character.lurking_list:
-                    if aim.name == target and aim.position <= 0:
+                    if aim.name.lower() == target.lower() and aim.position <= 0:
                         lurker.throw_update(aim.seat_point)
             else:
                 await ctx.send(f"{user_name}, you have no clods to throw :-(")
