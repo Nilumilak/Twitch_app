@@ -1,6 +1,7 @@
 import pygame
 import database
 from datetime import datetime, timedelta
+from Clod import Clod
 
 time_counter = timedelta(minutes=1)
 
@@ -27,6 +28,19 @@ WAVE = [pygame.image.load('images/wave_anim/wave_01_lowres.png'),
 ClAP = [pygame.image.load('images/clap_anim/clap_alt_01_lowres.png'),
         pygame.image.load('images/clap_anim/clap_alt_02_lowres.png')] * 10
 
+THROW = (([pygame.image.load('images/throw_anim/throw_lowres.png')] * 6) +
+         ([pygame.image.load('images/throw_anim/count_5_lowres.png')] * 3) +
+         ([pygame.image.load('images/throw_anim/count_4_lowres.png')] * 3) +
+         ([pygame.image.load('images/throw_anim/count_3_lowres.png')] * 3) +
+         ([pygame.image.load('images/throw_anim/count_2_lowres.png')] * 3) +
+         ([pygame.image.load('images/throw_anim/count_1_lowres.png')] * 3))
+
+CATCH = [pygame.image.load('images/catch/catch.png'), ] * 25
+
+CAUGHT = [pygame.image.load('images/caught/cool.png'), ] * 10
+
+OUCH = [pygame.image.load('images/ouch/ouch.png'), ] * 10
+
 
 class Character:
     lurking_list = []
@@ -34,10 +48,10 @@ class Character:
                  2720: True, 2820: True, 2920: True, 3020: True, 3120: True, 3220: True, 3320: True, 3420: True,
                  3520: True, 3620: True, 3720: True}
 
-    def __init__(self, name, screen, score=0):
+    def __init__(self, name, screen, points=0):
         self.name = name
         self.screen = screen
-        self.score = score
+        self.points = points
         self.time = datetime.now()
 
         self.image = SIT
@@ -66,21 +80,29 @@ class Character:
         self.chair_animation_count = 0  # counter for CHAIR frames
         self.wave_animation_count = 0  # counter for WAVE frames
         self.clap_animation_count = 0  # counter for CLAP frames
+        self.catch_animation_count = 0  # counter for CATCH frames
+        self.throw_animation_count = 0  # counter for THROW frames
+        self.caught_animation_count = 0  # counter for CAUGHT frames
+        self.ouch_animation_count = 0  # counter for OUCH frames
+
+        self.clod_amount = 0  # how many clods the character has
+        self.target = None
 
         self.add_lurker(self)
 
-    def score_gain(self):
+    def points_gain(self):
         if datetime.now() >= self.time + time_counter:
-            self.score += 1
+            self.points += 1
             self.time = datetime.now()
 
     @property
     def all_animations(self):
-        return {self.leave_animation_count, self.wave_animation_count, self.clap_animation_count}
+        return {self.leave_animation_count, self.wave_animation_count, self.clap_animation_count,
+                self.catch_animation_count, self.throw_animation_count}
 
     def move(self):
         """
-        The character is going to the seat
+        The character is going to the seat.
         """
         if self.move_animation_count >= self.animation_speed * len(WALK_LEFT):
             self.move_animation_count = 0
@@ -98,7 +120,7 @@ class Character:
 
     def wave(self):
         """
-        The character is waving if other animations isn't called
+        The character is waving if other animations isn't called.
         """
         if self.wave_animation_count > 0 and self.position <= 0:
             self.screen.blit(WAVE[self.wave_animation_count // self.animation_speed], self.image_rect)
@@ -107,15 +129,15 @@ class Character:
 
     def wave_update(self):
         """
-        Updates the counter for waving
+        Updates the counter for waving.
         """
-        if not any(self.all_animations - {self.wave_animation_count}):  # checks if other animations aren't working
+        if not any(self.all_animations):  # checks if other animations aren't working
             if self.position <= 0:
                 self.wave_animation_count = (len(WAVE) * self.animation_speed) - 1
 
     def clap(self):
         """
-        The character is clapping if other animations isn't called
+        The character is clapping if other animations isn't called.
         """
         if self.clap_animation_count > 0 and self.position <= 0:
             self.screen.blit(ClAP[self.clap_animation_count // self.animation_speed], self.image_rect)
@@ -124,27 +146,111 @@ class Character:
 
     def clap_update(self):
         """
-        Updates the counter for clapping
+        Updates the counter for clapping.
         """
-        if not any(self.all_animations - {self.clap_animation_count}):  # checks if other animations aren't working
+        if not any(self.all_animations):  # checks if other animations aren't working
             if self.position <= 0:
                 self.clap_animation_count = (len(ClAP) * self.animation_speed) - 1
 
+    def catch(self):
+        """
+        The character is trying to catch a clod if other animations isn't called.
+        """
+        if self.catch_animation_count > 0 and self.position <= 0:
+            self.screen.blit(CATCH[self.catch_animation_count // self.animation_speed], self.image_rect)
+            self.screen.blit(self.text, (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
+            self.catch_animation_count -= 1
+
+    def catch_update(self):
+        """
+        Updates the counter for catching.
+        """
+        if not any(self.all_animations):  # checks if other animations aren't working
+            if self.position <= 0:
+                self.catch_animation_count = (len(CATCH) * self.animation_speed) - 1
+
+    def get_a_clod(self):
+        """
+        The character gets 1 clod.
+        """
+        self.clod_amount += 1
+        self.points -= 10
+
+    def throw(self):
+        """
+        Throws a clod to another character.
+        """
+        if self.throw_animation_count > 0 and self.position <= 0:
+            self.screen.blit(THROW[self.throw_animation_count // self.animation_speed], self.image_rect)
+            self.screen.blit(self.text, (self.image_rect.centerx - self.text_width / 2, self.image_rect.centery - 70))
+            self.throw_animation_count -= 1
+        if self.throw_animation_count == 14:
+            self.clod_amount -= 1
+            Clod.clod_list.append(Clod(self.screen, self.seat_point, self.target, self.name))
+
+    def throw_update(self, target):
+        """
+        Updates the counter for throwing.
+        :param target: coordinates of another character
+        """
+        self.target = target
+        if not any(self.all_animations):  # checks if other animations aren't working
+            if self.position <= 0:
+                self.throw_animation_count = (len(THROW) * self.animation_speed) - 1
+
+    def caught(self):
+        """
+        Animation if the character caught a clod.
+        """
+        if self.caught_animation_count > 0 and self.position <= 0 and not self.ouch_animation_count:
+            self.screen.blit(CAUGHT[self.caught_animation_count // self.animation_speed],
+                             (self.image_rect.centerx + 30, self.image_rect.centery - 50))
+            self.caught_animation_count -= 1
+
+    def ouch(self):
+        """
+        Animation if the character didn't catch a clod.
+        """
+        if self.ouch_animation_count > 0 and self.position <= 0 and not self.caught_animation_count:
+            self.screen.blit(OUCH[self.ouch_animation_count // self.animation_speed],
+                             (self.image_rect.centerx + 30, self.image_rect.centery - 50))
+            self.ouch_animation_count -= 1
+
+    def clod_collision(self):
+        """
+        Gets a clod if animation of catching is called.
+        Clod hits the character if animation wasn't called.
+        """
+        for clod in Clod.clod_list:
+            if ((self.seat_point - 64) <= clod.x_axis <= (self.seat_point + 64) and clod.y_axis >= 1020
+                    and clod.who_threw != self.name):
+                clod.stop()
+                if self.catch_animation_count:
+                    print(self.name + ' got the clod')
+                    self.caught_animation_count = (len(CAUGHT) * self.animation_speed) - 1
+                    self.clod_amount += 1
+                    self.points += 5
+                else:
+                    print(self.name + ' did not get the clod')
+                    self.ouch_animation_count = (len(OUCH) * self.animation_speed) - 1
+
     def chair_puff(self):
         """
-        The chair animation
+        The chair animation.
         """
-        if self.image_rect.centerx < 0 and self.chair_animation_count < (len(CHAIR_POOF) * self.animation_speed):     # The chair fades out
+        if self.image_rect.centerx < 0 and self.chair_animation_count < (
+                len(CHAIR_POOF) * self.animation_speed):  # The chair fades out
             self.screen.blit(CHAIR_POOF_REVERSED[self.chair_animation_count // self.animation_speed],
                              (self.seat_point - self.image_rect.width / 2,
                               self.image_rect.centery - self.image_rect.height / 2))
             self.chair_animation_count += 1
 
-        elif self.position <= 50 and self.chair_animation_count >= (len(CHAIR_POOF) * self.animation_speed) or self.leave_animation_count > 0:      # The chair stands
+        elif self.position <= 50 and self.chair_animation_count >= (
+                len(CHAIR_POOF) * self.animation_speed) or self.leave_animation_count > 0:  # The chair stands
             self.screen.blit(CHAIR, (
                 self.seat_point - self.image_rect.width / 2, self.image_rect.centery - self.image_rect.height / 2))
 
-        elif 0 < self.position <= 49:               # The chair fades in
+        elif 0 < self.position <= 49:  # The chair fades in
             self.screen.blit(CHAIR_POOF[self.chair_animation_count // self.animation_speed],
                              (self.seat_point - self.image_rect.width / 2,
                               self.image_rect.centery - self.image_rect.height / 2))
@@ -152,7 +258,7 @@ class Character:
 
     def leave(self):
         """
-        The character leaves the seat
+        The character leaves the seat.
         """
         if self.leave_animation_count > 0 and self.position <= 0:
             if self.position <= 0:
@@ -163,16 +269,16 @@ class Character:
                 self.image_rect.centerx -= 6
             if self.leave_animation_count <= 0:
                 self.leave_animation_count = (len(WALK_LEFT) * self.animation_speed) - 1
-            if self.image_rect.centerx <= -1 * (len(CHAIR_POOF_REVERSED)*self.animation_speed*6):
-                database.update_score(self.name, self.score)
+            if self.image_rect.centerx <= -1 * (len(CHAIR_POOF_REVERSED) * self.animation_speed * 6):
+                database.update_points(self.name, self.points)
                 Character.positions[self.pos_place] = True
                 Character.lurking_list.remove(self)
 
     def leave_update(self):
         """
-        Updates the counter for leaving
+        Updates the counter for leaving.
         """
-        if not any(self.all_animations - {self.leave_animation_count}):  # checks if other animations aren't working
+        if not any(self.all_animations):  # checks if other animations aren't working
             if self.position <= 0:
                 self.leave_animation_count = (len(WALK_LEFT) * self.animation_speed) - 1
                 self.chair_animation_count = 0

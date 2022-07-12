@@ -23,7 +23,6 @@ def db_decorator(func):
 
             connection.autocommit = True
 
-            # the cursor for persorrming database operations
             result = func(connection, args[0], args[1] if len(args) > 1 else 0)
             return result
 
@@ -46,19 +45,19 @@ def check_users(connection, *args):
 
 
 @db_decorator
-def get_score(connection, *args):
+def get_points(connection, *args):
     with connection.cursor() as cursor:
         cursor.execute(
-            f"SELECT score FROM lurker WHERE name='{args[0]}';"
+            "SELECT points FROM lurker WHERE name=%s;", (args[0],)
         )
         return cursor.fetchone()[0]
 
 
 @db_decorator
-def update_score(connection, *args):
+def update_points(connection, *args):
     with connection.cursor() as cursor:
         cursor.execute(
-            f"UPDATE lurker SET score={args[1]} WHERE name='{args[0]}';"
+            f"UPDATE lurker SET points=%s WHERE name=%s;", (args[1], args[0])
         )
 
 
@@ -66,12 +65,12 @@ def update_score(connection, *args):
 def insert_user(connection, *args):
     with connection.cursor() as cursor:
         cursor.execute(
-            f"INSERT INTO lurker(name) values('{args[0]}');"
+            f"INSERT INTO lurker(name) values(%s);", (args[0],)
         )
 
 
 if __name__ == '__main__':
     print(check_users('pianoparrot'))
-    print(get_score('pianoparrot'))
-    update_score('pianoparrot', 50)
-    print(get_score('pianoparrot'))
+    print(get_points('pianoparrot'))
+    update_points('pianoparrot', 50)
+    print(get_points('pianoparrot'))

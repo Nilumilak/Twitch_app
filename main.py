@@ -7,6 +7,7 @@ import sys
 from twitchio.ext import commands
 from threading import Thread
 from Character import Character
+from Clod import Clod
 import database
 
 config = configparser.ConfigParser()
@@ -26,9 +27,7 @@ def get_chatters():
         'Client-Id': client_id,
     }
     respond = requests.get('https://tmi.twitch.tv/group/user/pianoparrot/chatters', headers=header)
-    # print(respond.status_code)
-    # pprint(respond.json())
-    return respond.json()['chatters']['viewers'] + respond.json()['chatters']['moderators']
+    return respond.json()['chatters']['viewers'] + respond.json()['chatters']['moderators'] + ['pianoparrot']
 
 
 bot = commands.Bot(
@@ -52,6 +51,7 @@ async def test_command(ctx):
     """
     print(ctx.message.raw_data)
     print(ctx.message.content)
+    print(ctx.message.content[ctx.message.content.find(' ') + 1:])
     print(ctx.message.author)
     print(ctx.message.echo)
     print(ctx.message.timestamp)
@@ -73,7 +73,7 @@ async def new_lurker(ctx):
 
     else:
         if database.check_users(user_name):
-            Character(user_name, screen, database.get_score(user_name))
+            Character(user_name, screen, database.get_points(user_name))
         else:
             database.insert_user(user_name)
             Character(user_name, screen)
@@ -112,13 +112,59 @@ async def lurker_leave(ctx):
                 await ctx.send(f"{user_name} has left the lurking place")
 
 
-@bot.command(name='score')
-async def lurker_score(ctx):
+@bot.command(name='clod')
+async def clod(ctx):
+    user_name = ctx.message.author.name
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name and lurker.position <= 0:
+            if lurker.points >= 10:
+                lurker.get_a_clod()
+                await ctx.send(f"{user_name}, you've got a clod, now you can throw it! -10 points")
+            else:
+                await ctx.send(f"{user_name}, you need at least 10 points to purchase the clod :-)")
+
+
+@bot.command(name='numclods')
+async def clods(ctx):
+    user_name = ctx.message.author.name
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name and lurker.position <= 0:
+            await ctx.send(f"{user_name}, you have {lurker.clod_amount} clod"+(f"s"*(lurker.clod_amount != 1)))
+
+
+@bot.command(name='throw')
+async def throw(ctx):
+    user_name = ctx.message.author.name
+    target = (ctx.message.content[ctx.message.content.find(' ') + 1:]).lower()
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name and lurker.position <= 0 and not any(lurker.all_animations):
+            if lurker.clod_amount > 0:
+                for aim in Character.lurking_list:
+                    if aim.name == target and aim.position <= 0:
+                        lurker.throw_update(aim.seat_point)
+            else:
+                await ctx.send(f"{user_name}, you have no clods to throw :-(")
+
+
+@bot.command(name='catch')
+async def catch(ctx):
     user_name = ctx.message.author.name
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name:
-            await ctx.send(f"Your score: {lurker.score}")
+            lurker.catch_update()
+
+
+@bot.command(name='points')
+async def lurker_points(ctx):
+    user_name = ctx.message.author.name
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name:
+            await ctx.send(f"Your points: {lurker.points}")
 
 
 @bot.command(name='leave_all')
@@ -133,7 +179,7 @@ async def lurker_leave(ctx):
 
 @bot.command(name='com_list')
 async def com_list(ctx):
-    await ctx.send(f"Commands are available: !lurk, !leave, !wave, !clap, !score, !lurkers")
+    await ctx.send(f"Commands are available: !lurk, !leave, !wave, !clap, !clod, !numclods, !throw username, !catch, !points, !lurkers")
 
 
 @bot.command(name='lurkers')
@@ -165,7 +211,7 @@ if __name__ == '__main__':
     past_time = time.time()  # start time
 
     while True:
-        if time.time() >= past_time + 600:  # if 10 minutes has passed, checks if lurkers are still watching
+        if time.time() >= past_time + 1200:  # if 20 minutes has passed, checks if lurkers are still watching
             t2 = Thread(target=checking)
             t2.start()
 
@@ -174,8 +220,10 @@ if __name__ == '__main__':
                 sys.exit()
         screen.fill(bg_color)
         if Character.lurking_list:
-            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap(), lurker.score_gain()) for lurker in
-             Character.lurking_list]
+            [clod.fly() for clod in Clod.clod_list]
+            [(lurker.move(), lurker.chair_puff(), lurker.wave(), lurker.clap(), lurker.points_gain(),
+              lurker.clod_collision(), lurker.throw(), lurker.catch(), lurker.caught(),
+              lurker.ouch()) for lurker in Character.lurking_list]
             [lurker.leave() for lurker in Character.lurking_list]
         pygame.display.update()
         pygame.time.delay(40)
