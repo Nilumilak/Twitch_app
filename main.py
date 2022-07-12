@@ -56,6 +56,7 @@ async def test_command(ctx):
     print(ctx.message.echo)
     print(ctx.message.timestamp)
     print(ctx.message.tags)
+    print(ctx.message.tags['display-name'])
     print(ctx.message.channel)
     print(ctx.message.id)
     await ctx.send('this is a test response')
@@ -63,7 +64,7 @@ async def test_command(ctx):
 
 @bot.command(name='lurk')
 async def new_lurker(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     if user_name in [lurker.name for lurker in Character.lurking_list]:
         await ctx.send(f"Hey {user_name}, you are already lurking :-)")
@@ -82,7 +83,7 @@ async def new_lurker(ctx):
 
 @bot.command(name='wave')
 async def lurker_wave(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name:
@@ -91,7 +92,7 @@ async def lurker_wave(ctx):
 
 @bot.command(name='clap')
 async def lurker_clap(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name:
@@ -100,7 +101,7 @@ async def lurker_clap(ctx):
 
 @bot.command(name='leave')
 async def lurker_leave(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     if user_name not in [lurker.name for lurker in Character.lurking_list]:
         await ctx.send(f"Hey {user_name}, you were not lurking :-)")
@@ -114,7 +115,7 @@ async def lurker_leave(ctx):
 
 @bot.command(name='clod')
 async def clod(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name and lurker.position <= 0:
@@ -127,7 +128,7 @@ async def clod(ctx):
 
 @bot.command(name='numclods')
 async def clods(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name and lurker.position <= 0:
@@ -136,7 +137,7 @@ async def clods(ctx):
 
 @bot.command(name='throw')
 async def throw(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
     target = (ctx.message.content[ctx.message.content.find(' ') + 1:]).lower()
 
     for lurker in Character.lurking_list:
@@ -151,7 +152,7 @@ async def throw(ctx):
 
 @bot.command(name='catch')
 async def catch(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name:
@@ -160,7 +161,7 @@ async def catch(ctx):
 
 @bot.command(name='points')
 async def lurker_points(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name:
@@ -169,7 +170,7 @@ async def lurker_points(ctx):
 
 @bot.command(name='leave_all')
 async def lurker_leave(ctx):
-    user_name = ctx.message.author.name
+    user_name = ctx.message.tags['display-name']
 
     if user_name == 'pianoparrot':
         for lurker in Character.lurking_list:
@@ -196,7 +197,7 @@ def checking():
     past_time = time.time()
     current_viewers = get_chatters()
     for lurker in Character.lurking_list:
-        if lurker.name not in current_viewers:
+        if lurker.name.lower() not in current_viewers:
             lurker.leave_update()
 
 

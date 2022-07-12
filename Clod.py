@@ -38,7 +38,7 @@ class Clod:
 
 if __name__ == '__main__':
     pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
+    screen = pygame.display.set_mode((1920, 1020))
     pygame.display.set_caption('twitch_app')
     bg_color = (0, 0, 0)
     Clod.clod_list.append(Clod(screen, 100, 500, 'pianoparrot'))
