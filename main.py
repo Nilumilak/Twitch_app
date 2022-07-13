@@ -172,7 +172,7 @@ async def lurker_points(ctx):
 async def lurker_leave(ctx):
     user_name = ctx.message.tags['display-name']
 
-    if user_name == 'pianoparrot':
+    if user_name == 'PianoParrot':
         for lurker in Character.lurking_list:
             if lurker.position <= 0 and not any(lurker.all_animations):
                 lurker.leave_update()
