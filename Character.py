@@ -221,7 +221,8 @@ class Character:
         Clod hits the character if animation wasn't called.
         """
         for clod in Clod.clod_list:
-            if ((self.seat_point - 64) <= clod.x_axis <= (self.seat_point + 64) and clod.y_axis >= 1020):
+            if ((self.seat_point - 64) <= clod.x_axis <= (self.seat_point + 64) and clod.y_axis >= 1020
+                    and clod.who_threw != self.name):
                 clod.stop()
                 if self.catch_animation_count:
                     print(self.name + ' got the clod')
