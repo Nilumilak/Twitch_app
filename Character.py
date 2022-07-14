@@ -39,7 +39,7 @@ CATCH = [pygame.image.load('images/catch/catch.png'), ] * 25
 
 CAUGHT = [pygame.image.load('images/caught/cool.png'), ] * 10
 
-OUCH = [pygame.image.load('images/ouch/ouch.png'), ] * 10
+OUCH = [pygame.image.load('images/ouch/fail_overlay_1.png'), pygame.image.load('images/ouch/fail_overlay_2.png')] * 8
 
 
 class Character:
@@ -212,8 +212,7 @@ class Character:
         Animation if the character didn't catch a clod.
         """
         if self.ouch_animation_count > 0 and self.position <= 0 and not self.caught_animation_count:
-            self.screen.blit(OUCH[self.ouch_animation_count // self.animation_speed],
-                             (self.image_rect.centerx + 30, self.image_rect.centery - 50))
+            self.screen.blit(OUCH[self.ouch_animation_count // self.animation_speed], self.image_rect)
             self.ouch_animation_count -= 1
 
     def clod_collision(self):
@@ -222,8 +221,7 @@ class Character:
         Clod hits the character if animation wasn't called.
         """
         for clod in Clod.clod_list:
-            if ((self.seat_point - 64) <= clod.x_axis <= (self.seat_point + 64) and clod.y_axis >= 1020
-                    and clod.who_threw != self.name):
+            if ((self.seat_point - 64) <= clod.x_axis <= (self.seat_point + 64) and clod.y_axis >= 1020):
                 clod.stop()
                 if self.catch_animation_count:
                     print(self.name + ' got the clod')

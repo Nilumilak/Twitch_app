@@ -1,7 +1,8 @@
 import pygame
 import sys
 
-CLOD = pygame.image.load('images/clod/ball_lowres.png')
+CLOD = [pygame.image.load('images/clod/ball_lowres.png'), pygame.image.load('images/clod/ball_lowres_2.png'),
+        pygame.image.load('images/clod/ball_lowres_3.png'), pygame.image.load('images/clod/ball_lowres_4.png')]
 
 
 class Clod:
@@ -23,11 +24,17 @@ class Clod:
         self.ground_position = self.max_y_height * self.y_speed
         self.fly_position = self.max_y_height * self.y_speed
 
+        self.animation_speed = 2
+        self.clod_animation_count = 0
+
     def fly(self):
         self.x_axis += self.x_speed
         self.fly_position -= self.y_speed
         self.y_axis -= self.fly_position
-        self.screen.blit(CLOD, (self.x_axis - 32, self.y_axis - 32))
+        self.screen.blit(CLOD[self.clod_animation_count // self.animation_speed], (self.x_axis - 32, self.y_axis - 32))
+        self.clod_animation_count += 1
+        if self.clod_animation_count >= self.animation_speed * len(CLOD):
+            self.clod_animation_count = 0
         if self.y_axis >= 1080:
             print('the clod fell')
             self.stop()
