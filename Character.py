@@ -37,7 +37,10 @@ THROW = (([pygame.image.load('images/throw_anim/throw_lowres.png')] * 6) +
 
 CATCH = [pygame.image.load('images/catch/catch.png'), ] * 25
 
-CAUGHT = [pygame.image.load('images/caught/cool.png'), ] * 10
+CAUGHT = [pygame.image.load('images/caught/pt_1_lowres.png'),
+          pygame.image.load('images/caught/pt_2_lowres.png'),
+          pygame.image.load('images/caught/pt_3_lowres.png'),
+          pygame.image.load('images/caught/pt_4_lowres.png')] * 4
 
 OUCH = [pygame.image.load('images/ouch/fail_overlay_1.png'), pygame.image.load('images/ouch/fail_overlay_2.png')] * 8
 
@@ -203,8 +206,7 @@ class Character:
         Animation if the character caught a clod.
         """
         if self.caught_animation_count > 0 and self.position <= 0 and not self.ouch_animation_count:
-            self.screen.blit(CAUGHT[self.caught_animation_count // self.animation_speed],
-                             (self.image_rect.centerx + 30, self.image_rect.centery - 50))
+            self.screen.blit(CAUGHT[self.caught_animation_count // self.animation_speed], self.image_rect)
             self.caught_animation_count -= 1
 
     def ouch(self):
