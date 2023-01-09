@@ -75,7 +75,7 @@ def get_vip_list():
     try:
         respond = requests.get('https://api.twitch.tv/helix/channels/vips', headers=header, params=params)
         if respond.status_code == 200:
-            return [user['user_login'] for user in respond.json()['data']]
+            return [user['user_name'] for user in respond.json()['data']]
     except ConnectionError as error:
         print(error)
 
@@ -129,8 +129,8 @@ def remove_vip_status(username_id: str):
 
 
 if __name__ == '__main__':
-    print(get_chatters())
-    print(get_user_id('pianoparrot'))
+    # print(get_chatters())
+    # print(get_user_id('pianoparrot'))
     # print(grant_vip_status('50935127'))
     # print(remove_vip_status('50935127'))
     print(get_vip_list())

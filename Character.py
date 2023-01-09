@@ -1,7 +1,9 @@
 import pygame
 import database
 from datetime import datetime, timedelta
+from time import time
 from Clod import Clod
+import twitch_api
 
 time_counter = timedelta(minutes=1)
 
@@ -256,6 +258,34 @@ class Character:
                              (self.seat_point - self.image_rect.width / 2,
                               self.image_rect.centery - self.image_rect.height / 2))
             self.chair_animation_count += 1
+
+    def get_vip_status(self):
+        """
+        Purchase VIP status
+        """
+        username_id = twitch_api.get_user_id(self.name.lower())
+        if username_id:
+            status = twitch_api.grant_vip_status(username_id)
+            if status:
+                if status != 422:
+                    self.points -= 300
+                    database.update_vip_time(self.name, int(time()))
+                    return True
+                else:
+                    return 422
+
+    def lose_vip_status(self):
+        """
+        Purchase VIP status
+        """
+        username_id = twitch_api.get_user_id(self.name.lower())
+        if username_id:
+            status = twitch_api.remove_vip_status(username_id)
+            if status:
+                if status != 422:
+                    return True
+                else:
+                    return 422
 
     def leave(self):
         """

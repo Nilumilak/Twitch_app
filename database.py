@@ -62,6 +62,23 @@ def update_points(connection, *args):
 
 
 @db_decorator
+def update_vip_time(connection, *args):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"UPDATE lurker SET vip_time=%s WHERE name=%s;", (args[1], args[0])
+        )
+
+
+@db_decorator
+def get_vip_time(connection, *args):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"SELECT vip_time from lurker where name=%s;", (args[0],)
+        )
+        return cursor.fetchone()[0]
+
+
+@db_decorator
 def insert_user(connection, *args):
     with connection.cursor() as cursor:
         cursor.execute(
@@ -70,7 +87,9 @@ def insert_user(connection, *args):
 
 
 if __name__ == '__main__':
-    print(check_users('pianoparrot'))
-    print(get_points('pianoparrot'))
-    update_points('pianoparrot', 50)
-    print(get_points('pianoparrot'))
+    # print(check_users('pianoparrot'))
+    # print(get_points('pianoparrot'))
+    # update_points('pianoparrot', 50)
+    # print(get_points('PianoParrot'))
+    # print(update_vip_time('PianoParrot', 100))
+    print(get_vip_time('PianoParrot'))

@@ -1,5 +1,3 @@
-import requests
-from pprint import pprint
 import configparser
 import pygame
 import time
@@ -169,6 +167,41 @@ async def lurker_points(ctx):
             await ctx.send(f"Your points: {lurker.points}")
 
 
+@bot.command(name='get_vip_for_a_week')
+async def get_vip_for_a_week(ctx):
+    user_name = ctx.message.tags['display-name']
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name:
+            if lurker.points >= 300:
+                if user_name not in twitch_api.get_vip_list():
+                    status = lurker.get_vip_status()
+                    if status and status != 422:
+                        await ctx.send(f"{user_name} purchased VIP status! :O")
+                    else:
+                        await ctx.send(f"Sorry {user_name}, something went wrong :\\ Try again in a few seconds")
+                else:
+                    await ctx.send(f"Hey {user_name}, you already have VIP status :\\")
+            else:
+                await ctx.send(f"Hey {user_name}, you are too poor :D You need to have 300 points for this")
+
+
+@bot.command(name='remove_vip_status')
+async def remove_vip_status(ctx):
+    user_name = ctx.message.tags['display-name']
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name:
+            if user_name in twitch_api.get_vip_list():
+                status = lurker.lose_vip_status()
+                if status and status != 422:
+                    await ctx.send(f"You've been kicked out of the VIP room! :|")
+                else:
+                    await ctx.send(f"Sorry {user_name}, something went wrong :\\ Try again in a few seconds")
+            else:
+                await ctx.send(f"Hey {user_name}, you are just a regular :D")
+
+
 @bot.command(name='leave_all')
 async def lurker_leave(ctx):
     user_name = ctx.message.tags['display-name']
@@ -181,7 +214,7 @@ async def lurker_leave(ctx):
 
 @bot.command(name='com_list')
 async def com_list(ctx):
-    await ctx.send(f"Commands are available: !lurk, !leave, !wave, !clap, !clod, !numclods, !throw username, !catch, !points, !lurkers")
+    await ctx.send(f"Commands are available: !lurk, !leave, !wave, !clap, !clod, !numclods, !throw username, !catch, !points, !get_vip_for_a_week, !remove_vip_status, !lurkers")
 
 
 @bot.command(name='lurkers')
@@ -202,7 +235,17 @@ def checking():
             lurker.leave_update()
 
 
+def vip_expired():
+    all_vip_users = twitch_api.get_vip_list()
+    for user in all_vip_users:
+        vip_time = database.get_vip_time(user)
+        if vip_time and vip_time + 604800 < time.time():
+            username_id = twitch_api.get_user_id(user.lower())
+            twitch_api.remove_vip_status(username_id)
+
+
 if __name__ == '__main__':
+    vip_expired()
     t1 = Thread(target=bot.run)
     t1.start()
     pygame.init()
