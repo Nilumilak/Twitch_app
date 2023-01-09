@@ -9,6 +9,7 @@ from threading import Thread
 from Character import Character
 from Clod import Clod
 import database
+import twitch_api
 
 config = configparser.ConfigParser()
 config.read('settings.ini')
@@ -18,16 +19,16 @@ access_token = config['Twitch']['access_token']
 token_oauth = config['Twitch']['token_oauth']
 
 
-def get_chatters():
-    """
-    Gets list of viewers from chat.
-    """
-    header = {
-        'Authorization': f'Bearer {access_token}',
-        'Client-Id': client_id,
-    }
-    respond = requests.get('https://tmi.twitch.tv/group/user/pianoparrot/chatters', headers=header)
-    return respond.json()['chatters']['viewers'] + respond.json()['chatters']['moderators'] + ['pianoparrot']
+# def get_chatters():
+#     """
+#     Gets list of viewers from chat.
+#     """
+#     header = {
+#         'Authorization': f'Bearer {access_token}',
+#         'Client-Id': client_id,
+#     }
+#     respond = requests.get('https://tmi.twitch.tv/group/user/pianoparrot/chatters', headers=header)
+#     return respond.json()['chatters']['viewers'] + respond.json()['chatters']['moderators'] + ['pianoparrot']
 
 
 bot = commands.Bot(
@@ -195,7 +196,7 @@ async def all_lurkers_list(ctx):
 def checking():
     global past_time
     past_time = time.time()
-    current_viewers = get_chatters()
+    current_viewers = twitch_api.get_chatters()
     for lurker in Character.lurking_list:
         if lurker.name.lower() not in current_viewers:
             lurker.leave_update()
