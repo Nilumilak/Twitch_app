@@ -216,24 +216,30 @@ async def timeout(ctx):
     text = ctx.message.content.split(' ', maxsplit=2)
 
     if len(text) >= 2:
-        target = text[1]
+        target = text[1].lower()
     if len(text) >= 3:
         reason = text[2]
 
     if target:
-        if target.lower() in twitch_api.get_list_of_banned_users():
-            await ctx.send(f"{user_name}, somebody already banned {target} :D")
-        else:
-            for lurker in Character.lurking_list:
-                if lurker.name == user_name:
-                    if lurker.points >= 100:
+        for lurker in Character.lurking_list:
+            if lurker.name == user_name:
+                if lurker.points >= 100:
+                    if target == 'pianoparrot':
+                        await ctx.send(f"Haha :D Do not even think about it :\\")
+                    elif target in ['kindredspirits7', 'dilecula', 'amanrosse', 'haarolean']:
+                        await ctx.send(f"That was brave, {user_name} B) But no :D ")
+                    elif target in ['donationalerts_', 'moobot', 'restreambot', 'songlistbot', 'streamelements']:
+                        await ctx.send(f"Really? They're not even human :\\")
+                    elif target in twitch_api.get_list_of_banned_users():
+                        await ctx.send(f"{user_name}, somebody already banned {target} :D")
+                    else:
                         status = lurker.give_timeout(target, reason if reason else None)
                         if status:
                             await ctx.send(f"{user_name}, just banned {target} :O")
                         else:
                             await ctx.send(f"Sorry {user_name}, something went wrong :\\ Try again in a few seconds")
-                    else:
-                        await ctx.send(f"{user_name}, you need at least 100 points to use such power B)")
+                else:
+                    await ctx.send(f"{user_name}, you need at least 100 points to use such power B)")
 
 
 @bot.command(name='leave_all')
