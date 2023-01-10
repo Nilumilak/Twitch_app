@@ -128,9 +128,66 @@ def remove_vip_status(username_id: str):
         print(error)
 
 
+def timeout_user(username_id: str, reason: str = "Just because"):
+    """
+    Sets timeout for user
+
+    :param username_id: username id
+    :param reason: reason for the timeout
+    :return: status
+    """
+    header = {
+        'Authorization': f'Bearer {access_token}',
+        'Client-Id': client_id,
+    }
+
+    params = {
+        'broadcaster_id': '83984822',
+        'moderator_id': '83984822',
+    }
+
+    data = {"data": {"user_id": username_id, "duration": 60, "reason": reason}}
+
+    try:
+        respond = requests.post('https://api.twitch.tv/helix/moderation/bans', headers=header, params=params, json=data)
+        return respond.status_code
+    except ConnectionError as error:
+        print(error)
+
+
+def get_list_of_banned_users(page=None):
+    """
+    Gets list of banned users
+
+    :return: list of users
+    """
+    header = {
+        'Authorization': f'Bearer {access_token}',
+        'Client-Id': client_id,
+    }
+
+    params = {
+        'broadcaster_id': '83984822',
+        'first': 100,
+        'after': page,
+    }
+
+    try:
+        respond = requests.get('https://api.twitch.tv/helix/moderation/banned', headers=header, params=params)
+        users = [user['user_login'] for user in respond.json()['data']]
+
+        if respond.json()['pagination']:
+            return users + get_list_of_banned_users(respond.json()['pagination']['cursor'])
+        else:
+            return users
+    except ConnectionError as error:
+        print(error)
+
+
 if __name__ == '__main__':
     # print(get_chatters())
     # print(get_user_id('pianoparrot'))
     # print(grant_vip_status('50935127'))
     # print(remove_vip_status('50935127'))
-    print(get_vip_list())
+    # print(get_vip_list())
+    print(get_list_of_banned_users())

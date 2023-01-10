@@ -287,6 +287,23 @@ class Character:
                 else:
                     return 422
 
+    def give_timeout(self, username: str, reason):
+        """
+        Sets timeout for user
+        """
+        username_id = twitch_api.get_user_id(username.lower())
+
+        if not reason:
+            reason = 'Just because'
+
+        if username_id:
+            status = twitch_api.timeout_user(username_id, reason)
+            if status >= 400:
+                return False
+            else:
+                self.points -= 100
+                return status
+
     def leave(self):
         """
         The character leaves the seat.

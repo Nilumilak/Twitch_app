@@ -70,3 +70,29 @@ token_oauth = config['Twitch']['token_oauth']
 # respond = requests.post('https://api.twitch.tv/helix/channels/vips', headers=header, params=params)
 # print(respond.status_code)
 # pprint(respond.json())
+
+
+def timeout_users(page=None):
+    header = {
+        'Authorization': f'Bearer {access_token}',
+        'Client-Id': client_id,
+    }
+
+    params = {
+        'broadcaster_id': '83984822',
+        'first': 100,
+        'after': page,
+    }
+
+    try:
+        respond = requests.get('https://api.twitch.tv/helix/moderation/banned', headers=header, params=params)
+        users = [user['user_login'] for user in respond.json()['data']]
+
+        if respond.json()['pagination']:
+            return users + timeout_users(respond.json()['pagination']['cursor'])
+        else:
+            return users
+    except ConnectionError as error:
+        print(error)
+
+print(timeout_users())
