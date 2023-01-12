@@ -142,7 +142,7 @@ async def clods(ctx):
 @bot.command(name='throw')
 async def throw(ctx):
     user_name = ctx.message.tags['display-name']
-    target = (ctx.message.content[ctx.message.content.find(' ') + 1:])
+    target = ctx.message.content[ctx.message.content.find(' ') + 1:]
 
     for lurker in Character.lurking_list:
         if lurker.name == user_name and lurker.position <= 0 and not any(lurker.all_animations):
@@ -182,7 +182,7 @@ async def get_vip_for_a_week(ctx):
                 if user_name not in twitch_api.get_vip_list():
                     status = lurker.get_vip_status()
                     if status and status != 422:
-                        await ctx.send(f"{user_name} purchased VIP status! :O")
+                        await ctx.send(f"{user_name} purchased VIP status! :O -300 points")
                     else:
                         await ctx.send(f"Sorry {user_name}, something went wrong :\\ Try again in a few seconds")
                 else:
@@ -234,12 +234,51 @@ async def timeout(ctx):
                         await ctx.send(f"{user_name}, somebody already banned {target} :D")
                     else:
                         status = lurker.give_timeout(target, reason if reason else None)
-                        if status:
-                            await ctx.send(f"{user_name}, just banned {target} :O")
+                        if status and target == lurker.name:
+                            await ctx.send(f"Good job, {user_name}, you banned yourself :D -100 points")
+                        elif status:
+                            await ctx.send(f"{user_name} just banned {target} :O -100 points")
                         else:
                             await ctx.send(f"Sorry {user_name}, something went wrong :\\ Try again in a few seconds")
                 else:
                     await ctx.send(f"{user_name}, you need at least 100 points to use such power B)")
+                    
+                    
+@bot.command(name='play')
+async def play(ctx):
+    user_name = ctx.message.tags['display-name']
+    bet = ctx.message.content[ctx.message.content.find(' ') + 1:]
+    
+    if bet.isdigit() and int(bet) > 0:
+        for lurker in Character.lurking_list:
+            if lurker.name == user_name:
+                if lurker.points >= int(bet):
+                    lurker.ready_to_play(bet)
+                    await ctx.send(f"{user_name} wants to play for {bet} point{'s' if int(bet) > 1 else ''} B) Who will accept the challenge?")
+                else:
+                    await ctx.send(f"{user_name}, you don't have enough points for this bet :\\")
+
+
+@bot.command(name='accept')
+async def accept(ctx):
+    user_name = ctx.message.tags['display-name']
+
+    for lurker in Character.lurking_list:
+        if lurker.name == user_name:
+            for target in Character.lurking_list:
+                if target.calling_for_play and target.name != lurker.name:
+                    if lurker.points >= target.bet:
+                        await ctx.send(f"{target.name}'s challenge is accepted by {lurker.name} :O")
+                        status = lurker.play_round(target, target.bet)
+                        await ctx.send(f"{user_name} threw {lurker.pick.upper()} and {target.name} threw {target.pick.upper()}")
+                        if status:
+                            await ctx.send(f"{user_name} won and got {target.bet} point{'s' if target.bet > 1 else ''}! B)")
+                        elif status is None:
+                            await ctx.send(f"DRAW!")
+                        else:
+                            await ctx.send(f"{target.name} won and got {target.bet} point{'s' if target.bet > 1 else ''}! B)")
+                    else:
+                        await ctx.send(f"{user_name}, you don't have enough points to accept the challenge :(")
 
 
 @bot.command(name='leave_all')

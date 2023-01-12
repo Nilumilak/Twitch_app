@@ -1,6 +1,7 @@
 import pygame
 import database
 from datetime import datetime, timedelta
+from random import randint
 from time import time
 from Clod import Clod
 import twitch_api
@@ -91,7 +92,10 @@ class Character:
         self.ouch_animation_count = 0  # counter for OUCH frames
 
         self.clod_amount = 0  # how many clods the character has
-        self.target = None
+        self.target = None  # character's target
+        self.calling_for_play = False  # character's game status
+        self.bet = None  # character's bet for game
+        self.pick = None  # paper, scissors or rock
 
         self.add_lurker(self)
 
@@ -303,6 +307,50 @@ class Character:
             else:
                 self.points -= 100
                 return status
+
+    def ready_to_play(self, bet: str):
+        """
+        User is ready to play
+        """
+        self.calling_for_play = True
+        self.bet = int(bet)
+
+    def play_round(self, target, bet: int):
+        """
+        User throws paper, scissors or rock
+        """
+        options = ['paper', 'scissors', 'rock']
+
+        self.pick = options[randint(0, 2)]
+        target.pick = options[randint(0, 2)]
+        target.calling_for_play = False
+
+        if self.pick == options[0] and target.pick == options[1]:
+            self.points -= bet
+            target.points += bet
+            return False
+        elif self.pick == options[0] and target.pick == options[2]:
+            self.points += bet
+            target.points -= bet
+            return True
+        elif self.pick == options[1] and target.pick == options[0]:
+            self.points += bet
+            target.points -= bet
+            return True
+        elif self.pick == options[1] and target.pick == options[2]:
+            self.points -= bet
+            target.points += bet
+            return False
+        elif self.pick == options[2] and target.pick == options[0]:
+            self.points -= bet
+            target.points += bet
+            return False
+        elif self.pick == options[2] and target.pick == options[1]:
+            self.points += bet
+            target.points -= bet
+            return True
+        else:
+            pass
 
     def leave(self):
         """
